@@ -1,0 +1,153 @@
+---
+title: "R Notebook"
+---
+
+```{r}
+remotes::install_github("jcrodriguez1989/chatgpt")
+install.packages("chatgpt")
+install.packages("htmltools")
+```
+
+```{r}
+library(htmltools)
+library(chatgpt)
+```
+
+# API 設定
+* 想確認用量跟費用請洽 HC
+* API-KEY 替換成你的 API-KEY
+```{r}
+Sys.setenv(OPENAI_API_KEY = "API-KEY")
+```
+
+# 相關參數設定
+* OPENAI_MODEL; 默認為"gpt-3.5-turbo"
+* OPENAI_MAX_TOKENS; 默認為256
+* OPENAI_TEMPERATURE; 默認為1  
+  * 這個是 chatgpt 的聯想程度，若純作摘要，可以考慮設為 0，速度也疑似比較快；若是需要它創造或發想內容，建議不要更改
+* OPENAI_TOP_P; 默認為1
+* OPENAI_FREQUENCY_PENALTY; 默認為0
+* OPENAI_PRESENCE_PENALTY; 默認為0
+```{r}
+Sys.setenv(OPENAI_TEMPERATURE = 0)
+```
+
+# 指令
+```{r}
+ask_chatgpt("問AI內容的文字寫在這裡")
+```
+
+# 批次使用
+* 可使用 paste0 將內容黏在一起。可載入資料夾中的示範資料（military.csv）
+* 此代碼的意思是
+  * ask_chatgpt() 將 () 裡的內容詢問 chatgpt
+  * paste0() 將內容合併成一段文字。所以你可以將指令寫入，並用迴圈帶入不同的資料。下面的代碼中，我的重複指令是「請以列點方式回答：... 負面、還是中性的。」不同的資料是 military 文件中 transresult 欄位的內容
+  * as.character() 將 () 的內容存取成文字
+  * military$ai[q] 將內容放到 military 文件中的 ai 欄位
+```{r}
+for(q in 1:10){
+military$ai[q] <- as.character(ask_chatgpt(paste0("請以列點方式回答：1.用中文摘要文中的主旨，如果有網址的話請忽略它，2. 判斷該文章的內容對台灣的情緒是正面、負面、還是中性的。",military$transresult[q])))
+}
+```
+
+# 控制錯誤
+* 因為常常會遇到 curl error，我請 chatGPT 幫我做了錯誤控制並更改了代碼，目前這版的代碼可以很順地跑完，約 7 分鐘跑 100 筆資料
+```{r}
+for(q in 1:779){
+  print(q)
+
+  # 設定 15 秒的時間限制
+  start_time <- Sys.time()
+  
+  # 執行 ask_chatgpt() 函數，如果超過 15 秒沒有回應，就重新啟動迴圈
+  while(TRUE){
+    tryCatch({
+      military_ruters$ai[q] <- as.character(ask_chatgpt(paste0("請以列點方式回答：1.用中文摘要文中的主旨，如果有網址的話請忽略它，2. 判斷該文章的內容對台灣的情緒是正面、負面、還是中性的。",military_ruters$text[q])))
+      if(!is.na(military_ruters$ai[q])){
+        break
+      }
+      # 檢查回應時間是否超過 15 秒
+      if(difftime(Sys.time(), start_time, units = "secs") > 15){
+        next
+      }
+      Sys.sleep(1)
+    }, error = function(e) {
+      # 捕捉 HTTP/2 stream 0 was not closed cleanly: PROTOCOL_ERROR (err 1) 錯誤，重新啟動迴圈
+      if(grepl("HTTP/2 stream 0 was not closed cleanly: PROTOCOL_ERROR (err 1)", e$message)){
+        next
+      }
+    })
+  }
+}
+
+write.csv(military_ruters,"military_ruters.csv",row.names=FALSE)
+
+```
+
+# 測試
+* https://rpubs.com/nirmal/setting_chat_gpt_R
+```{r}
+library(httr)
+library(stringr)
+library(jsonlite)
+```
+
+```{r}
+my_API <-"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"
+```
+
+```{r}
+# 創建一個空的上下文列表，以便記錄對話狀態
+context <- list()
+
+hey_chatGPT <- function(answer_my_question) {
+  chat_GPT_answer <- POST(
+    url = "https://api.openai.com/v1/chat/completions",
+    add_headers(Authorization = paste("Bearer", my_API)),
+    content_type_json(),
+    encode = "json",
+    body = list(
+      model = "gpt-3.5-turbo-0301",
+      # 添加上一次對話的上下文
+      context = context,
+      messages = list(
+        list(
+          role = "user",
+          content = answer_my_question
+        )
+      )
+    )
+  )
+  
+  # 從API的回應中獲取對話結果和新的上下文
+  chat_result <- content(chat_GPT_answer)$choices[[1]]$text
+  new_context <- content(chat_GPT_answer)$context
+  
+  # 將新的上下文保存到全局變量中，以便下一次對話可以使用
+  assign("context", new_context, envir = globalenv())
+  
+  # 返回回答
+  str_trim(chat_result)
+}
+
+```
+
+```{r}
+response <- hey_chatGPT("What are the difference between R and Python?")
+cat(response)
+
+```
+
+
+```{r}
+api_key <- "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"
+chat_history <- ""
+ 
+while (TRUE) {
+  prompt <- readline("你的问题：")
+  response <- get_chatGPT_response(prompt, chat_history, api_key)
+  cat("ChatGPT的回答：", response, "\n\n")
+  chat_history <- paste(chat_history, prompt, response)
+}
+```
+
