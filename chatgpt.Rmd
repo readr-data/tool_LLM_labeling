@@ -3,7 +3,6 @@ library(httr)
 ```
 
 # 輸入 ChatGPT API金鑰
-* 登入（READr google 帳號） https://openai.com/ 選 API，左側選 API KEY 即可找到金鑰
 ```{r}
 chatGPT_API <- "YOUR-API-KEY"
 ```
