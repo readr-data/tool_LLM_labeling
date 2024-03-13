@@ -1,5 +1,6 @@
 ```{r}
 library(httr)
+library(readr)
 ```
 
 # 輸入 ChatGPT API金鑰
@@ -12,20 +13,25 @@ chatGPT_API <- "YOUR-API-KEY"
 model="gpt-3.5-turbo-0301"
 ```
 
+# 匯入檔案
+```{r}
+sample<-read_csv("sample.csv")
+```
+
 # 指令
 ```{r}
 prompt_content<-"You are a political figure's aide, analyzing the policy proposals of an electoral opponent. Extract one to three objects from the following text in Traditional Chinese, and separate them with commas. Do not provide additional explanations. If unable to analyze, respond with 'don't know."
 ```
 
 # 以下做法是將 API 回傳的結果存回原本文件中的新增欄位。請按照你的文件名跟欄位名，在以下註解標記處修改：
-* 文件名 legi_politic
+* 文件名 sample
 * 要替換的文本欄位 content
 * 新增欄位名 chatgpt
 ```{r}
 # 改成你的文件名跟新增欄位名
-legi_politic$chatgpt<-""
+sample$chatgpt<-""
 
-for(q in 1:nrow(legi_politic)){  #替換文件名
+for(q in 1:nrow(sample)){  #替換文件名
   print(q)
 chatGPT_response <- POST(
   url = "https://api.openai.com/v1/chat/completions",
@@ -34,13 +40,13 @@ chatGPT_response <- POST(
   encode = "json",
   body = list(
     model = model,
-    messages = list(list(role = "user", content = paste0(prompt_content,legi_politic$content[q]))), # 記得替換文件名和要替換的文本欄位
+    messages = list(list(role = "user", content = paste0(prompt_content,sample$content[q]))), # 記得替換文件名和要替換的文本欄位
     temperature = 0  # 在這裡設定 temperature 為 0
   )
 )
 
 result <- content(chatGPT_response)$choices[[1]]$message$content
 
-legi_politic$chatgpt[q] <- result  # 記得替換文件名
+sample$chatgpt[q] <- result  # 記得替換文件名
 }
 ```
