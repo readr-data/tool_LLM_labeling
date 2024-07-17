@@ -1,5 +1,6 @@
 ```{r}
 library(httr)
+library(readr)
 ```
 
 # 輸入 ChatGPT API金鑰
@@ -11,6 +12,12 @@ chatGPT_API <- "YOUR-API-KEY"
 ```{r}
 model="gpt-3.5-turbo-0301"
 ```
+
+# 匯入檔案
+```{r}
+sample<-read_csv("sample.csv")
+```
+
 
 # 指令
 ```{r}
