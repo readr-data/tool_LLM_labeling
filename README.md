@@ -1,5 +1,5 @@
-# tool_openai_chatgpt
-使用 chatGPT 幫忙標記資料
+# tool_LLM_labeling
+使用 chatGPT, claude 幫忙標記資料
 
 * 目前觀察，將聯想程度（TEMPERATURE）參數降到最低，速度變蠻快的，若純作摘要，可以考慮設為 0；若是需要它創造或發想內容，建議不要更改
 * 目前 AI 仍有幻想（[hallucination](https://en.wikipedia.org/wiki/Hallucination_(artificial_intelligence))）的狀況，所以還是需要驗算。目前已知應避免的狀況有：
