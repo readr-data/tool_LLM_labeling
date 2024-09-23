@@ -9,8 +9,11 @@ chatGPT_API <- "YOUR-API-KEY"
 ```
 
 # GPT 版本
+* 可以在這裡找尋適合的 model 名稱：https://platform.openai.com/docs/models
+* model 價格比較：https://openai.com/api/pricing
+* 如果不確定要使用什麼 model，可以在 channel 詢問
 ```{r}
-model="gpt-3.5-turbo-0301"
+model="gpt-4o-mini"
 ```
 
 # 匯入檔案
