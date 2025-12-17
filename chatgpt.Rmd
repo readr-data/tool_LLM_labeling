@@ -37,18 +37,18 @@ sample$chatgpt<-""
 for(q in 1:nrow(sample)){  #替換文件名
   print(q)
 chatGPT_response <- POST(
-  url = "https://api.openai.com/v1/chat/completions",
+  url = "https://api.openai.com/v1/responses",
   add_headers(Authorization = paste("Bearer", chatGPT_API)),
   content_type_json(),
   encode = "json",
   body = list(
     model = model,
-    messages = list(list(role = "user", content = paste0(prompt_content,sample$content[q]))), # 記得替換文件名和要替換的文本欄位
-    temperature = 0  # 在這裡設定 temperature 為 0
+    input = paste0(prompt_content,sample$content[q]) # 記得替換文件名和要替換的文本欄位
   )
 )
 
-result <- content(chatGPT_response)$choices[[1]]$message$content
+res <- content(chatGPT_response, as="parsed", simplifyVector = FALSE)
+result <- res[["output"]][[2]][["content"]][[1]][["text"]]
 
 sample$chatgpt[q] <- result  # 記得替換文件名
 }
